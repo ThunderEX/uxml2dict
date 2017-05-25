@@ -19,7 +19,7 @@ ATTR = "ATTR"
 #ATTR_VAL = "ATTR_VAL"
 
 
-def parseitem(iter_tok, parsed):
+def parseitem(iter_tok, parsed, lesslist):
     while True:
         try:
             tok = next(iter_tok)
@@ -40,26 +40,26 @@ def parseitem(iter_tok, parsed):
             if namespace:
                 tag = namespace + ':' + tag
             d = OrderedDict()
-            iter_tok = parseitem(iter_tok, d)
+            iter_tok = parseitem(iter_tok, d, lesslist)
             if not d:
                 d = None
             elif len(d) == 1 and '#text' in d:
                 d = d['#text']
-            if tag not in parsed:
-                parsed[tag] = d
-            elif isinstance(parsed[tag], list):
-                parsed[tag].append(d)
-            else:
-                parsed[tag] = [parsed[tag], d]
+            parsed.setdefault(tag, [])
+            if lesslist and len(parsed[tag]) == 1:
+                parsed[tag] = [parsed[tag]]
+            parsed[tag].append(d)
+            if lesslist and len(parsed[tag]) == 1:
+                parsed[tag] = parsed[tag][0]
         elif tok[0] == END_TAG:
             return iter_tok
         else:
             raise NotImplementedError('Token %s not support' % tok[0])
 
 
-def parse(iter_tok):
+def parse(iter_tok, lesslist=True):
     parsed = OrderedDict()
-    parseitem(iter_tok, parsed)
+    parseitem(iter_tok, parsed, lesslist)
     return parsed
 
 
