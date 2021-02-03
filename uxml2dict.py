@@ -43,12 +43,11 @@ def parseitem(iter_tok, parsed, lesslist):
             iter_tok = parseitem(iter_tok, d, lesslist)
             if not d:
                 d = None
-            elif len(d) == 1 and '#text' in d:
-                d = d['#text']
             parsed.setdefault(tag, [])
-            if lesslist and len(parsed[tag]) == 1:
-                parsed[tag] = [parsed[tag]]
-            parsed[tag].append(d)
+            if lesslist and not isinstance(parsed[tag], list):
+                parsed[tag] = [parsed[tag], d]
+            else:
+                parsed[tag].append(d)
             if lesslist and len(parsed[tag]) == 1:
                 parsed[tag] = parsed[tag][0]
         elif tok[0] == END_TAG:
@@ -68,4 +67,7 @@ if __name__ == '__main__':
     import xmltok
     iter_tok = xmltok.tokenize(open('vector-text.svg'))
     parsed = parse(iter_tok)
-    print(json.dumps(parsed, indent=4))
+    try:
+        print(json.dumps(parsed, indent=4))
+    except TypeError: # json in micropython does not support keyword argument indent
+        print(json.dumps(parsed))
